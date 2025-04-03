@@ -17,12 +17,12 @@ namespace VibeShot
             this.MinimizeBox = false;
             this.ShowInTaskbar = false;
             this.StartPosition = FormStartPosition.CenterParent;
-            this.Size = new Size(300, 150);
+            this.Size = new Size(300, 200); // Increased height for better layout
             
             // Create controls
             Label label = new Label
             {
-                Text = "Enter text to add:",
+                Text = "Enter text:",
                 AutoSize = true,
                 Location = new Point(10, 15)
             };
@@ -31,15 +31,16 @@ namespace VibeShot
             {
                 Location = new Point(10, 40),
                 Width = 265,
-                Height = 24,
-                Multiline = true
+                Height = 80, // Increased height for text input
+                Multiline = true,
+                AcceptsReturn = true
             };
             
             Button okButton = new Button
             {
                 Text = "OK",
                 DialogResult = DialogResult.OK,
-                Location = new Point(120, 75),
+                Location = new Point(120, 130), // Moved down below the textbox
                 Size = new Size(75, 25)
             };
             
@@ -47,7 +48,7 @@ namespace VibeShot
             {
                 Text = "Cancel",
                 DialogResult = DialogResult.Cancel,
-                Location = new Point(200, 75),
+                Location = new Point(200, 130), // Moved down below the textbox
                 Size = new Size(75, 25)
             };
             
@@ -61,6 +62,9 @@ namespace VibeShot
             this.AcceptButton = okButton;
             this.CancelButton = cancelButton;
             this.FormClosing += TextInputDialog_FormClosing;
+            
+            // Set focus to the textbox
+            this.Load += (s, e) => textBox.Focus();
         }
 
         private void TextInputDialog_FormClosing(object? sender, FormClosingEventArgs e)
