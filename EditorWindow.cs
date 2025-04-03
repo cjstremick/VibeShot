@@ -38,8 +38,7 @@ namespace VibeShot
             Arrow,
             Rectangle,
             Text,
-            Pixelate,
-            NumberStamp
+            NumberStamp  // Will update the name but keep the enum value for compatibility
         }
 
         private Tool currentTool = Tool.Select;
@@ -143,14 +142,8 @@ namespace VibeShot
                 DisplayStyle = ToolStripItemDisplayStyle.ImageAndText
             };
             
-            // Pixelate tool
-            var pixelateButton = new ToolStripButton("Pixelate", null, (s, e) => SetTool(Tool.Pixelate))
-            {
-                DisplayStyle = ToolStripItemDisplayStyle.ImageAndText
-            };
-            
-            // Number stamp tool
-            var numberButton = new ToolStripButton("Number", null, (s, e) => SetTool(Tool.NumberStamp))
+            // Number stamp tool - update the visible label only
+            var numberButton = new ToolStripButton("Stamp", null, (s, e) => SetTool(Tool.NumberStamp))
             {
                 DisplayStyle = ToolStripItemDisplayStyle.ImageAndText
             };
@@ -184,7 +177,6 @@ namespace VibeShot
                 arrowButton, 
                 rectButton, 
                 textButton, 
-                pixelateButton, 
                 numberButton,
                 new ToolStripSeparator(),
                 colorButton,
@@ -502,12 +494,6 @@ namespace VibeShot
                         previewEnd = e.Location;
                         isPreviewActive = true;
                     }
-                    else if (currentTool == Tool.Pixelate)
-                    {
-                        // For pixelate, we need to operate directly on the image
-                        // since it can't be represented as a movable element
-                        SaveForUndoElementState();
-                    }
                 }
             }
         }
@@ -760,12 +746,6 @@ namespace VibeShot
                         previewEnd = e.Location;
                         imageBox.Invalidate();
                         break;
-                        
-                    case Tool.Pixelate:
-                        // Apply pixelate directly to the working image
-                        ApplyPixelateEffect(GetPixelateArea(lastPoint, e.Location));
-                        lastPoint = e.Location;
-                        break;
                 }
             }
         }
@@ -817,108 +797,6 @@ namespace VibeShot
                 isPreviewActive = false;
                 imageBox.Invalidate(); // Clear any preview
             }
-        }
-
-        private Rectangle GetPixelateArea(Point start, Point end)
-        {
-            int brushSize = currentSize * 5;
-            int x = Math.Min(start.X, end.X) - brushSize / 2;
-            int y = Math.Min(start.Y, end.Y) - brushSize / 2;
-            int width = Math.Abs(end.X - start.X) + brushSize;
-            int height = Math.Abs(end.Y - start.Y) + brushSize;
-            
-            // Ensure we stay within image bounds
-            x = Math.Max(0, x);
-            y = Math.Max(0, y);
-            width = Math.Min(workingImage.Width - x, width);
-            height = Math.Min(workingImage.Height - y, height);
-            
-            return new Rectangle(x, y, width, height);
-        }
-
-        private void ApplyPixelateEffect(Rectangle area)
-        {
-            // Use a more moderate pixelation effect based on the size
-            // Smaller pixelSize for more subtle effect
-            int pixelSize = Math.Max(2, currentSize * 2);
-            
-            // Create a temporary bitmap to work with
-            using (Bitmap temp = new Bitmap(area.Width, area.Height))
-            {
-                // Copy the area to temp
-                using (Graphics g = Graphics.FromImage(temp))
-                {
-                    g.DrawImage(workingImage, 
-                        new Rectangle(0, 0, area.Width, area.Height),
-                        area, 
-                        GraphicsUnit.Pixel);
-                }
-                
-                // Calculate average colors instead of just taking top-left pixel
-                for (int y = 0; y < temp.Height; y += pixelSize)
-                {
-                    for (int x = 0; x < temp.Width; x += pixelSize)
-                    {
-                        // Calculate average color for this block
-                        Color averageColor = CalculateAverageColor(temp, x, y, 
-                            Math.Min(pixelSize, temp.Width - x), 
-                            Math.Min(pixelSize, temp.Height - y));
-                        
-                        // Fill the entire block with this average color
-                        using (Graphics g = Graphics.FromImage(temp))
-                        {
-                            using (SolidBrush brush = new SolidBrush(averageColor))
-                            {
-                                g.FillRectangle(brush, 
-                                    x, y, 
-                                    Math.Min(pixelSize, temp.Width - x), 
-                                    Math.Min(pixelSize, temp.Height - y));
-                            }
-                        }
-                    }
-                }
-                
-                // Draw the pixelated result back to the working image
-                using (Graphics g = Graphics.FromImage(workingImage))
-                {
-                    g.DrawImage(temp, area);
-                }
-            }
-            
-            // Update the picture box since we modified the image directly
-            imageBox.Invalidate();
-        }
-        
-        // Helper method to calculate the average color of a rectangle in a bitmap
-        private Color CalculateAverageColor(Bitmap bitmap, int startX, int startY, int width, int height)
-        {
-            long totalR = 0, totalG = 0, totalB = 0;
-            int pixelCount = 0;
-            
-            // Sample area to calculate average (for speed, we can skip some pixels for large areas)
-            int sampleStep = width * height > 400 ? 2 : 1;
-            
-            for (int y = startY; y < startY + height; y += sampleStep)
-            {
-                for (int x = startX; x < startX + width; x += sampleStep)
-                {
-                    if (x < bitmap.Width && y < bitmap.Height)
-                    {
-                        Color pixel = bitmap.GetPixel(x, y);
-                        totalR += pixel.R;
-                        totalG += pixel.G;
-                        totalB += pixel.B;
-                        pixelCount++;
-                    }
-                }
-            }
-            
-            if (pixelCount == 0) return Color.Black;
-            
-            return Color.FromArgb(
-                (int)(totalR / pixelCount), 
-                (int)(totalG / pixelCount), 
-                (int)(totalB / pixelCount));
         }
 
         private void EditorWindow_KeyDown(object? sender, KeyEventArgs e)
