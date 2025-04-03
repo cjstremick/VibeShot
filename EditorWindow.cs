@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using System.Linq;
+using System.IO;
 
 namespace VibeShot
 {
@@ -69,12 +70,11 @@ namespace VibeShot
             InitializeComponents();
             
             // Calculate the height of all non-image UI elements
-            int menuStripHeight = 24;
             int toolStripHeight = 25;
             int statusStripHeight = 22; // Approximate height of status strip
             
             // Total vertical space needed for UI elements
-            int totalUIHeight = menuStripHeight + toolStripHeight + statusStripHeight;
+            int totalUIHeight = toolStripHeight + statusStripHeight;
             
             // Set client size to match image size plus space for controls
             this.ClientSize = new Size(
@@ -92,26 +92,16 @@ namespace VibeShot
         private void InitializeComponents()
         {
             this.Text = "VibeShot - Screenshot Editor";
-            this.Icon = SystemIcons.Application; // Custom icon will be added later
+            
+            // Load custom icon instead of using system icon
+            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VibeShot.ico");
+            this.Icon = File.Exists(iconPath) 
+                ? new Icon(iconPath) 
+                : SystemIcons.Application; // Fallback to system icon if not found
+            
             this.MinimizeBox = false;
             this.MaximizeBox = false; // Disable maximize box
             this.KeyPreview = true;
-            
-            // Create menu strip
-            MenuStrip menuStrip = new MenuStrip();
-            
-            ToolStripMenuItem fileMenu = new ToolStripMenuItem("File");
-            fileMenu.DropDownItems.Add("Save As...", null, SaveAs_Click);
-            menuStrip.Items.Add(fileMenu);
-            
-            ToolStripMenuItem editMenu = new ToolStripMenuItem("Edit");
-            editMenu.DropDownItems.Add("Copy", null, Copy_Click);
-            editMenu.DropDownItems.Add("Undo", null, Undo_Click);
-            editMenu.DropDownItems.Add("Reset", null, Reset_Click);
-            menuStrip.Items.Add(editMenu);
-            
-            this.MainMenuStrip = menuStrip;
-            this.Controls.Add(menuStrip);
             
             // Create toolbar for annotation tools
             toolStrip = new ToolStrip();
@@ -169,6 +159,12 @@ namespace VibeShot
                     currentSize = size;
             };
             
+            // Keep only Reset in the toolbar
+            var resetButton = new ToolStripButton("Reset", null, Reset_Click)
+            {
+                DisplayStyle = ToolStripItemDisplayStyle.Text
+            };
+            
             // Add items to toolbar
             toolStrip.Items.AddRange(new ToolStripItem[] 
             {
@@ -182,8 +178,7 @@ namespace VibeShot
                 colorButton,
                 sizeSelector,
                 new ToolStripSeparator(),
-                new ToolStripButton("Undo", null, Undo_Click) { DisplayStyle = ToolStripItemDisplayStyle.Text },
-                new ToolStripButton("Reset", null, Reset_Click) { DisplayStyle = ToolStripItemDisplayStyle.Text }
+                resetButton
             });
             
             this.Controls.Add(toolStrip);
@@ -235,9 +230,9 @@ namespace VibeShot
             
             // Adjust the position of the image after all controls are loaded
             this.Load += (s, e) => {
-                // Get the top position after toolbars
-                int topPosition = menuStrip.Height + toolStrip.Height;
-                // Move the image down below the toolbars
+                // Get the top position after toolbar
+                int topPosition = toolStrip.Height;
+                // Move the image down below the toolbar
                 imageBox.Location = new Point(0, topPosition);
             };
         }
