@@ -247,10 +247,24 @@ namespace VibeShot
                     toolButton.Checked = false;
             }
             
-            // Check the current tool button
-            int toolIndex = (int)tool;
-            if (toolIndex < toolStrip.Items.Count && toolStrip.Items[toolIndex * 2] is ToolStripButton currentButton)
-                currentButton.Checked = true;
+            // Check the current tool button - Fix the bug where the wrong tool gets highlighted
+            // Find the correct button by looking for its event handler's target tool
+            foreach (ToolStripItem item in toolStrip.Items)
+            {
+                if (item is ToolStripButton button)
+                {
+                    // Compare the button's text with the tool name
+                    if ((tool == Tool.Select && button.Text == "Select") ||
+                        (tool == Tool.Arrow && button.Text == "Arrow") ||
+                        (tool == Tool.Rectangle && button.Text == "Rectangle") ||
+                        (tool == Tool.Text && button.Text == "Text") ||
+                        (tool == Tool.NumberStamp && button.Text == "Stamp"))
+                    {
+                        button.Checked = true;
+                        break;
+                    }
+                }
+            }
             
             // Set appropriate cursor
             switch (tool)
