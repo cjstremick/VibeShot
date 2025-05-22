@@ -127,5 +127,14 @@ namespace VibeShot.Tools
                 Context.Render();
             }
         }
+        
+        public void HandleKeyDown(Keys key)
+        {
+            if (key == Keys.Escape)
+            {
+                ClearSelection();
+                Context.Render();
+            }
+        }
     }
 }

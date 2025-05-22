@@ -18,6 +18,9 @@ namespace VibeShot.Tools
         public Font CurrentFont { get; set; }
         public List<DrawableElement> Elements { get; }
         
+        // User preference for inline text editing
+        public bool UseInlineTextEditing { get; set; } = true;
+        
         // For direct text editing
         public TextBox DirectTextBox { get; }
         public Panel? TextEditPanel { get; set; }

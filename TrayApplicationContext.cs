@@ -31,7 +31,15 @@ namespace VibeShot
             };
 
             // Add menu items
-            trayIcon.ContextMenuStrip.Items.Add("Capture Screenshot", null, CaptureScreenshot_Click);
+            trayIcon.ContextMenuStrip.Items.Add("Capture", null, CaptureScreenshot_Click);
+            trayIcon.ContextMenuStrip.Items.Add("VibeShot on GitHub", null, (s, e) =>
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://github.com/cjstremick/VibeShot",
+                    UseShellExecute = true
+                });
+            });
             trayIcon.ContextMenuStrip.Items.Add("-"); // Separator
             trayIcon.ContextMenuStrip.Items.Add("Exit", null, Exit_Click);
 

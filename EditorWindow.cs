@@ -507,6 +507,15 @@ namespace VibeShot
                 selectionTool?.DeleteSelectedElement();
                 e.Handled = true;
             }
+            // Handle ESC to clear selection if selection tool is active
+            else if (e.KeyCode == Keys.Escape)
+            {
+                if (toolManager.GetActiveTool() == toolManager.SelectionTool)
+                {
+                    toolManager.SelectionTool.HandleKeyDown(Keys.Escape);
+                    e.Handled = true;
+                }
+            }
         }
 
         private void Undo_Click(object? sender, EventArgs e)
