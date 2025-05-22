@@ -10,17 +10,26 @@ namespace VibeShot.Tools
         private bool isEditing = false;
         private Point editLocation;
 
+        private Font GetEmojiCapableFont(float size, FontStyle style = FontStyle.Regular)
+        {
+            // Try Segoe UI Emoji, fallback to Segoe UI Symbol, then default
+            try { return new Font("Segoe UI Emoji", size, style); } catch {}
+            try { return new Font("Segoe UI Symbol", size, style); } catch {}
+            return new Font(FontFamily.GenericSansSerif, size, style);
+        }
+
         public TextTool(EditorContext context) 
             : base(context, "Text")
         {
-            // Create the inline text editor but don't add it yet
+            // Use emoji-capable font for the inline text editor
+            var emojiFont = GetEmojiCapableFont(context.CurrentFont.Size, context.CurrentFont.Style);
             inlineTextBox = new TextBox
             {
                 Multiline = true,
                 BorderStyle = BorderStyle.None,
                 // Use a fully opaque background color to avoid ArgumentException
                 BackColor = Color.White, // Changed from semi-transparent to solid color
-                Font = Context.CurrentFont,
+                Font = emojiFont,
                 ForeColor = Context.CurrentColor
             };
             
@@ -92,17 +101,14 @@ namespace VibeShot.Tools
         {
             if (isEditing && !string.IsNullOrEmpty(inlineTextBox.Text))
             {
-                // Save for undo
                 Context.SaveForUndo();
-                
-                // Create text element with current settings
+                // Use emoji-capable font for the rendered text
+                var emojiFont = GetEmojiCapableFont(Context.CurrentFont.Size, Context.CurrentFont.Style);
                 var textElement = new ShadowedTextElement(
                     inlineTextBox.Text,
                     editLocation,
                     Context.CurrentColor,
-                    Context.CurrentFont);
-                
-                // Add to canvas
+                    emojiFont);
                 Context.AddElement(textElement);
             }
             
@@ -143,7 +149,6 @@ namespace VibeShot.Tools
         
         private void ShowTextDialog(Point location)
         {
-            // Create input dialog to get text
             using (var inputDialog = new TextInputDialog())
             {
                 // Position the dialog near but not directly under the mouse
@@ -157,20 +162,14 @@ namespace VibeShot.Tools
                 // Show dialog and wait for result
                 if (inputDialog.ShowDialog() == DialogResult.OK && !string.IsNullOrEmpty(inputDialog.InputText))
                 {
-                    // Save for undo
                     Context.SaveForUndo();
-                    
-                    // Create a new text element with the input text
+                    var emojiFont = GetEmojiCapableFont(Context.CurrentFont.Size, Context.CurrentFont.Style);
                     var textElement = new ShadowedTextElement(
                         inputDialog.InputText,
                         location,
                         Context.CurrentColor, 
-                        Context.CurrentFont);
-                        
-                    // Add the element
+                        emojiFont);
                     Context.AddElement(textElement);
-                    
-                    // Update display
                     Context.Render();
                 }
             }
